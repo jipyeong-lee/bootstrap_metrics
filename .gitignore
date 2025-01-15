@@ -1,0 +1,21 @@
+# .gitignore
+# 데이터 파일 (개인정보 포함)
+data/
+
+# 환경 변수 파일
+.env
+
+# Python 가상 환경
+venv/
+.env/
+*.pyc
+__pycache__/
+
+# IDE 설정 파일
+.vscode/
+.idea/
+
+# 기타
+*.pkl
+*.csv
+*.log
