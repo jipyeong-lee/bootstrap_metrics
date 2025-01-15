@@ -1,41 +1,39 @@
-import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed
-from config import *
-from utils import load_data, load_predictions, process_multiple_files, calculate_format_averages
-from metrics import *
+from src.data.load_data import load_data
+from src.evaluation.evaluate import process_multiple_files
 
 # 데이터 로드
-x_train, y_train, x_valid, y_valid, x_test, y_test = load_data(TRAIN_DATA_PATH, VALID_DATA_PATH, TEST_DATA_PATH, OUTCOME_VAR, INPUT_VARS)
+train_path = '/home/jplee/narrow_or_general/data/inspire/train_data.csv'
+valid_path = '/home/jplee/narrow_or_general/data/inspire/valid_data.csv'
+test_path = '/home/jplee/narrow_or_general/data/inspire/test_data.csv'
+outcome_var = 'inhosp_death_30day'
+input_vars = [
+    'age', 'sex', 'emop', 'bmi', 'andur', 
+    'preop_hb', 'preop_platelet', 'preop_wbc', 'preop_aptt', 'preop_ptinr', 'preop_glucose',
+    'preop_bun', 'preop_albumin', 'preop_ast', 'preop_alt', 'preop_creatinine', 'preop_sodium', 'preop_potassium'
+]
+
+(x_train, y_train), (x_valid, y_valid), (x_test, y_test) = load_data(train_path, valid_path, test_path, outcome_var, input_vars)
 
 # 파일 경로 리스트
 file_paths = [
     {
-        'name': 'model1-sentence',
-        'valid': os.path.join(PRED_DIR, 'pred_valid_sentence.pkl'), 
-        'test': os.path.join(PRED_DIR, 'pred_test_sentence.pkl')
+        'name': '2-shot-false-sentence',
+        'valid': f'/home/jplee/narrow_or_general/pred/openbiollm/inspire/inhosp_death_30day/BF16/sentence/pred_2shot_false_valid_inspire.pkl', 
+        'test': f'/home/jplee/narrow_or_general/pred/openbiollm/inspire/inhosp_death_30day/BF16/sentence/pred_2shot_false_test_inspire.pkl'
     },
     {
-        'name': 'model1-json',
-        'valid': os.path.join(PRED_DIR, 'pred_valid_json.npy'), 
-        'test': os.path.join(PRED_DIR, 'pred_test_json.npy')
-    },
-    {
-        'name': 'model2-sentence',
-        'valid': os.path.join(PRED_DIR, 'pred_valid_sentence_v2.pkl'), 
-        'test': os.path.join(PRED_DIR, 'pred_test_sentence_v2.pkl')
-    },
-    {
-        'name': 'model2-json',
-        'valid': os.path.join(PRED_DIR, 'pred_valid_json_v2.npy'), 
-        'test': os.path.join(PRED_DIR, 'pred_test_json_v2.npy')
+        'name': '2-shot-false-json',
+        'valid': f'/home/jplee/narrow_or_general/pred/openbiollm/inspire/inhosp_death_30day/BF16/json/pred_2shot_false_valid_inspire.pkl', 
+        'test': f'/home/jplee/narrow_or_general/pred/openbiollm/inspire/inhosp_death_30day/BF16/json/pred_2shot_false_test_inspire.pkl'
     },
 ]
 
+# 계산할 성능 지표 이름들
+metric_names = ['AUROC', 'AUPRC', 'Sensitivity', 'Specificity', 'Precision', 'F1', 'Accuracy', 'Brier', 'ICI', 'Calibration Slope', 'Calibration Intercept', 'Unreliability p-value']
+
 # 여러 파일에 대해 성능 지표 계산 및 데이터프레임 생성
-results_df = process_multiple_files(file_paths, METRIC_NAMES)
-results_df = calculate_format_averages(results_df, METRIC_NAMES)
+results_df = process_multiple_files(file_paths, metric_names, y_valid, y_test)
 
 # 결과 출력
-results_df.to_csv('results/results.csv', index=False)
-print("Results saved to 'results/results.csv'")
+results_df.to_csv('tmp_result_with_averages.csv', index=False)

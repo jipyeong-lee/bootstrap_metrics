@@ -1,106 +1,105 @@
-# Bootstrap Metrics
+# Machine Learning Model Evaluation Toolkit
 
-This repository provides a comprehensive toolkit for calculating and evaluating performance metrics using bootstrapping techniques. It is designed to assess the performance of machine learning models, particularly in clinical and healthcare settings, where robust evaluation is critical.
-
----
+This project provides a comprehensive toolkit for evaluating the performance of machine learning models using various metrics such as AUROC, AUPRC, Brier score, calibration slope, and more. It is designed to be modular, easy to use, and extensible for custom evaluation needs.
 
 ## Features
 
-- **Performance Metrics**: Calculate a wide range of performance metrics, including:
-  - AUROC (Area Under the Receiver Operating Characteristic Curve)
-  - AUPRC (Area Under the Precision-Recall Curve)
-  - Sensitivity, Specificity, Precision, F1 Score, Accuracy
-  - Brier Score, Integrated Calibration Index (ICI), Calibration Slope, Calibration Intercept
-  - Hosmer-Lemeshow Test p-value
-
-- **Bootstrapping**: Use bootstrapping to estimate confidence intervals for performance metrics, ensuring robust evaluation.
-
-- **Flexible Input**: Supports multiple file formats (e.g., `.pkl`, `.npy`) for predictions and labels.
-
-- **Automated Workflow**: Automatically processes multiple prediction files and generates a consolidated results table.
-
----
-
-## Repository Structure
-
-```
-bootstrap_metrics/
-├── src/                   # Source code
-│   ├── config.py          # Configuration settings (e.g., file paths, metric names)
-│   ├── metrics.py         # Functions for calculating performance metrics
-│   ├── utils.py           # Utility functions (e.g., data loading, file processing)
-│   └── main.py            # Main script to run the pipeline
-├── data/                  # Data files (e.g., train.csv, valid.csv, test.csv)
-├── models/                # Model predictions (e.g., .pkl, .npy files)
-├── results/               # Output results (e.g., results.csv)
-├── README.md              # This file
-└── requirements.txt       # Python dependencies
-```
-
----
+- **Performance Metrics**: Calculate AUROC, AUPRC, Sensitivity, Specificity, Precision, F1 Score, Accuracy, Brier Score, and more.
+- **Calibration Metrics**: Evaluate model calibration using Integrated Calibration Index (ICI), calibration slope, intercept, and Hosmer-Lemeshow test.
+- **Bootstrap Confidence Intervals**: Compute confidence intervals for metrics using bootstrapping.
+- **Modular Design**: Easily extend or modify the toolkit to include additional metrics or evaluation methods.
 
 ## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/bootstrap_metrics.git
-   cd bootstrap_metrics
-   ```
+To install the required dependencies, run:
 
-2. Install the required dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+```
 
-3. Set up the data and prediction files:
-   - Place your data files (`train.csv`, `valid.csv`, `test.csv`) in the `data/` directory.
-   - Place your prediction files (e.g., `.pkl`, `.npy`) in the `models/predictions/` directory.
+Alternatively, you can install the package directly using `setup.py`:
 
----
+```bash
+python setup.py install
+```
 
 ## Usage
 
-To run the pipeline, execute the following command:
+### Running the Evaluation
+
+To evaluate model predictions, modify the `main.py` file to specify your data paths and model predictions, then run:
 
 ```bash
 python src/main.py
 ```
 
-This will:
-1. Load the data and predictions.
-2. Calculate performance metrics using bootstrapping.
-3. Generate a consolidated results table (`results/results.csv`).
+This will generate a CSV file (`tmp_result_with_averages.csv`) containing the evaluation results with confidence intervals.
 
----
+### Example Code
 
-## Configuration
+Here's an example of how to use the toolkit in your own script:
 
-Modify the `src/config.py` file to customize the following:
-- **Data Paths**: Update `TRAIN_DATA_PATH`, `VALID_DATA_PATH`, and `TEST_DATA_PATH` to point to your data files.
-- **Prediction Paths**: Update `PRED_DIR` to point to your prediction files.
-- **Metrics**: Add or remove metrics from the `METRIC_NAMES` list as needed.
+```python
+from src.data.load_data import load_data
+from src.evaluation.evaluate import process_multiple_files
 
----
+# Load data
+train_path = 'path/to/train_data.csv'
+valid_path = 'path/to/valid_data.csv'
+test_path = 'path/to/test_data.csv'
+outcome_var = 'target_column'
+input_vars = ['feature1', 'feature2', 'feature3']
 
-## Example Output
+(x_train, y_train), (x_valid, y_valid), (x_test, y_test) = load_data(train_path, valid_path, test_path, outcome_var, input_vars)
 
-The output is saved in `results/results.csv` and includes the following columns:
-- **File**: Name of the prediction file.
-- **AUROC**: Area Under the ROC Curve with 95% confidence interval.
-- **AUPRC**: Area Under the Precision-Recall Curve with 95% confidence interval.
-- **Sensitivity**, **Specificity**, **Precision**, **F1**, **Accuracy**: Classification metrics with 95% confidence intervals.
-- **Brier**, **ICI**, **Calibration Slope**, **Calibration Intercept**, **Unreliability p-value**: Calibration metrics with 95% confidence intervals.
+# Define file paths for predictions
+file_paths = [
+    {
+        'name': 'model1',
+        'valid': 'path/to/model1_valid_predictions.pkl',
+        'test': 'path/to/model1_test_predictions.pkl'
+    },
+    {
+        'name': 'model2',
+        'valid': 'path/to/model2_valid_predictions.pkl',
+        'test': 'path/to/model2_test_predictions.pkl'
+    },
+]
 
----
+# Define metrics to calculate
+metric_names = ['AUROC', 'AUPRC', 'Sensitivity', 'Specificity', 'Precision', 'F1', 'Accuracy', 'Brier', 'ICI', 'Calibration Slope', 'Calibration Intercept', 'Unreliability p-value']
 
-## Contributing
+# Process files and calculate metrics
+results_df = process_multiple_files(file_paths, metric_names, y_valid, y_test)
 
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
+# Save results
+results_df.to_csv('evaluation_results.csv', index=False)
+```
 
----
+## Project Structure
 
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
+```
+project_name/
+│
+├── README.md                   # Project documentation
+├── requirements.txt            # List of dependencies
+├── setup.py                    # Setup script for package installation
+├── src/                        # Source code
+│   ├── __init__.py             # Package initialization
+│   ├── metrics/                # Metrics calculation modules
+│   │   ├── __init__.py
+│   │   ├── calibration.py      # Calibration-related metrics
+│   │   ├── classification.py   # Classification metrics
+│   │   └── utils.py            # Utility functions
+│   ├── data/                   # Data loading and preprocessing
+│   │   ├── __init__.py
+│   │   └── load_data.py        # Data loading functions
+│   ├── evaluation/             # Evaluation pipeline
+│   │   ├── __init__.py
+│   │   └── evaluate.py         # Main evaluation functions
+│   └── main.py                 # Entry point for the evaluation
+└── tests/                      # Unit tests
+    ├── __init__.py
+    ├── test_metrics.py         # Tests for metrics
+    └── test_evaluation.py      # Tests for evaluation pipeline
+```
